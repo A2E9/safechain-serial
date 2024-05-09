@@ -1,0 +1,12 @@
+{
+	"vmArgs": "--module-path \"./lib;${javafx.sdk.path}/lib\" --add-modules javafx.controls,javafx.fxml --add-exports javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED --add-exports javafx.graphics/com.sun.glass.ui=ALL-UNNAMED --add-exports javafx.graphics/com.sun.javafx.geom.transform=ALL-UNNAMED --add-exports javafx.graphics/com.sun.javafx.tk=ALL-UNNAMED --add-exports javafx.graphics/com.sun.glass.utils=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED -classpath \"./bin;./src/lib/jSerialComm-2.10.4.jar\"",
+	"configurations": [
+		{
+			"type": "java",
+			"name": "App",
+			"request": "launch",
+			"mainClass": "com.safechain/com.safechain.App",
+			"projectName": "safechain"
+		}
+	]
+}
