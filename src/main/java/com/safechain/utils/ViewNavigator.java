@@ -1,6 +1,9 @@
 package com.safechain.utils;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+
+import com.fazecast.jSerialComm.SerialPort;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -8,7 +11,7 @@ import javafx.scene.Scene;
 
 public class ViewNavigator {
     private static Scene scene;
-    private static Object data;
+    private static TransferData data;
 
     public static void setScene(Scene scene) {
         ViewNavigator.scene = scene;
@@ -22,16 +25,17 @@ public class ViewNavigator {
     }
 
     public static Parent loadFXML(String fxml) throws IOException {
+        System.out.println("aaaaaa");
         FXMLLoader fxmlLoader = new FXMLLoader(ViewNavigator.class.getResource("/com/safechain/" + fxml + ".fxml"));
-
+        System.out.println(fxmlLoader);
         return fxmlLoader.load();
     }
 
-    public static void setData(Object data) {
-        ViewNavigator.data = data;
+    public static void setData(SerialPort serialPort, PrintWriter sensorWriter) {
+        ViewNavigator.data = new TransferData(serialPort, sensorWriter);
     }
 
-    public static Object getData() {
+    public static TransferData getData() {
         return data;
     }
 }
