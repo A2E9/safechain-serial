@@ -1,0 +1,225 @@
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Scanner;
+
+import com.fazecast.jSerialComm.SerialPort;
+
+public class SerialCommunication {
+    public static void main(String[] args) throws InterruptedException, IOException {
+        Scanner sc = new Scanner(System.in);
+
+        // Select the port
+        System.out.println("Available Serial Ports:");
+        SerialPort[] ports = SerialPort.getCommPorts();
+        for (int i = 0; i < ports.length; i++) {
+            System.out.println(i + ": " + ports[i].toString());
+        }
+        System.out.print("Please select a port (0-" + (ports.length - 1) + "): ");
+        int portIndex = sc.nextInt();
+
+        // Open the port
+        SerialPort comPort = ports[portIndex];
+        comPort.openPort();
+        comPort.setComPortParameters(9600, 8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
+        comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 0);
+
+        Scanner sensorReader = new Scanner(comPort.getInputStream());
+        PrintWriter sensorWriter = new PrintWriter(comPort.getOutputStream());
+
+        // Choose to send or receive
+        System.out.println("Please choose:");
+        System.out.println("0) Sender");
+        System.out.println("1) Both");
+        System.out.println("2) Receiver");
+        int choice = sc.nextInt();
+
+        if (choice == 0) {
+            send(sensorWriter);
+        } else if (choice == 1) {
+            sendAndReceive(sensorReader, sensorWriter, "val1");
+        } else {
+            receive(sensorReader, comPort);
+        }
+
+        comPort.closePort();
+    }
+
+    private static void send(PrintWriter sensorWriter) {
+        try {
+            for (int i = 0; i < 600; ++i) {
+                String message = "Team Zero sending data " + i + "<END>\n";
+                System.out.println("SENDING: " + message);
+                sensorWriter.print(message);
+                sensorWriter.flush();
+                Thread.sleep(1000);
+            }
+        } catch (InterruptedException e) {
+            System.out.println("Receiving interrupted.");
+        } catch (Exception e) {
+            System.out.println("Error occurred while receiving data:");
+            e.printStackTrace();
+        }
+    }
+
+    private static void receive(Scanner sensorReader, SerialPort comPort) {
+        try {
+            System.out.println("Receiving data... (Press Ctrl+C to stop)");
+            while (true) {
+                if (sensorReader.hasNextLine()) {
+                    String receivedMessage = sensorReader.nextLine();
+                    System.out.println("RECEIVED: " + receivedMessage);
+                } else {
+                    // No data available, sleep for a short duration to avoid high CPU usage
+                    Thread.sleep(100);
+                }
+
+            }
+        } catch (InterruptedException e) {
+            System.out.println("Receiving interrupted.");
+        } catch (Exception e) {
+            System.out.println("Error occurred while receiving data:");
+            e.printStackTrace();
+        } finally {
+            sensorReader.close();
+        }
+    }
+
+    private static final int MAX_RETRIES = 3;
+    private static final int TIMEOUT = 5000; // 5 seconds
+
+    // private static void sendAndReceive(Scanner sensorReader, PrintWriter
+    // sensorWriter, String deviceId) {
+    // try {
+    // System.out.println("Sending and receiving data... (Press Ctrl+C to stop)");
+
+    // // Send device ID to acknowledge existence
+    // sendMessage(sensorWriter, deviceId + "<END>\n", "SENDING ID");
+
+    // // Receive acknowledgement from the other device
+    // String receivedId = receiveMessage(sensorReader, "RECEIVED ID");
+    // System.out.println(receivedId + "1");
+    // // Send messages with parity
+    // for (int i = 0; i < 600; ++i) {
+    // String message = "Device " + deviceId + " sending data " + i;
+    // String parityBit = calculateParityBit(message);
+    // String messageWithParity = message + "|" + parityBit + "<END>\n";
+
+    // boolean messageSent = false;
+    // int retries = 0;
+    // while (!messageSent && retries < MAX_RETRIES) {
+    // sendMessage(sensorWriter, messageWithParity, "SENDING");
+
+    // // Receive acknowledgement with timeout
+    // String acknowledgement = receiveMessageWithTimeout(sensorReader, "RECEIVED
+    // ACK", TIMEOUT);
+
+    // if (acknowledgement != null && acknowledgement.equals("ACK")) {
+    // messageSent = true;
+    // } else {
+    // retries++;
+    // System.out.println("Retry attempt " + retries);
+    // }
+    // }
+
+    // if (!messageSent) {
+    // System.out.println("Failed to send message after " + MAX_RETRIES + "
+    // retries.");
+    // }
+
+    // Thread.sleep(1000);
+    // }
+    // } catch (InterruptedException e) {
+    // System.out.println("Sending and receiving interrupted.");
+    // } catch (Exception e) {
+    // System.out.println("Error occurred while sending and receiving data:");
+    // e.printStackTrace();
+    // } finally {
+    // sensorReader.close();
+    // sensorWriter.close();
+    // }
+    // }
+    private static void sendAndReceive(Scanner sensorReader, PrintWriter sensorWriter, String deviceId) {
+        try {
+            System.out.println("Sending and receiving data... (Press Ctrl+C to stop)");
+
+            // Send device ID to acknowledge existence
+            // sendMessage(sensorWriter, deviceId + "<END>\n", "SENDING ID");
+
+            // // Receive the other device's ID
+            // String receivedId = receiveMessage(sensorReader, "RECEIVED ID");
+
+            // Half-duplex communication
+            for (int i = 0; i < 600; ++i) {
+                // Send message
+                String message = "Device " + deviceId + " sending data " + i + "<END>\n";
+                sendMessage(sensorWriter, message, "SENDING");
+
+                // Wait for the other device to send a message
+                Thread.sleep(1000);
+
+                // Receive message
+                String receivedMessage = receiveMessage(sensorReader, "RECEIVED");
+                System.out.println(receivedMessage);
+
+                // Process received message
+                // ...
+            }
+        } catch (InterruptedException e) {
+            System.out.println("Sending and receiving interrupted.");
+        } catch (Exception e) {
+            System.out.println("Error occurred while sending and receiving data:");
+            e.printStackTrace();
+        } finally {
+            sensorReader.close();
+            sensorWriter.close();
+        }
+    }
+
+    private static void sendMessage(PrintWriter sensorWriter, String message, String prefix) {
+        System.out.println(prefix + ": " + message);
+        sensorWriter.print(message);
+        sensorWriter.flush();
+    }
+
+    private static String receiveMessage(Scanner sensorReader, String prefix) throws InterruptedException {
+        StringBuilder receivedData = new StringBuilder();
+
+        if (sensorReader.hasNext()) {
+            String receivedFragment = sensorReader.next();
+            receivedData.append(receivedFragment);
+            if (receivedFragment.endsWith("<END>")) {
+                String receivedMessage = receivedData.toString();
+                receivedMessage = receivedMessage.replace("<END>", "");
+                System.out.println(prefix + ": " + receivedMessage);
+                return receivedMessage;
+            } else {
+                receivedData.append(" ");
+            }
+        }
+        return null;
+    }
+
+    private static String receiveMessageWithTimeout(Scanner sensorReader, String prefix, int timeout)
+            throws InterruptedException {
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < timeout) {
+            if (sensorReader.hasNext()) {
+                return receiveMessage(sensorReader, prefix);
+            }
+            Thread.sleep(100);
+        }
+        System.out.println("Timeout occurred while waiting for message.");
+        return null;
+    }
+
+    private static String calculateParityBit(String message) {
+        int count = 0;
+        for (char c : message.toCharArray()) {
+            if (c == '1') {
+                count++;
+            }
+        }
+        return (count % 2 == 0) ? "0" : "1";
+    }
+}

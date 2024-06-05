@@ -25,7 +25,6 @@ public class ViewNavigator {
     }
 
     public static Parent loadFXML(String fxml) throws IOException {
-        System.out.println("aaaaaa");
         FXMLLoader fxmlLoader = new FXMLLoader(ViewNavigator.class.getResource("/com/safechain/" + fxml + ".fxml"));
         System.out.println(fxmlLoader);
         return fxmlLoader.load();

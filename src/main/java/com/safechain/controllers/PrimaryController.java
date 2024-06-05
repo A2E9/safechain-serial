@@ -22,17 +22,21 @@ public class PrimaryController {
 
 	public void initialize() {
 
-		for (int i = 0; i < SerialPort.getCommPorts().length; i++) {
-			System.out.println(i + ": " + SerialPort.getCommPorts()[i].toString());
+		final SerialPort[] serialPorts = SerialPort.getCommPorts();
+
+		for (int i = 0; i < serialPorts.length; i++) {
+			System.out.println(i + ": " + serialPorts[i].toString());
 
 			Button comBtn = new Button();
 			comBtn.setText(SerialPort.getCommPorts()[i].toString());
 
 			final int portIndex = i;
+			serialPort = serialPorts[portIndex];
+			serialPort.openPort();
+			serialPort.setComPortParameters(9600, 8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
+			serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 0);
+
 			comBtn.setOnAction(event -> {
-				serialPort = SerialPort.getCommPorts()[portIndex];
-				serialPort.openPort();
-				serialPort.setComPortParameters(9600, 8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
 				switchToSecondary();
 			});
 			sensorWriter = new PrintWriter(serialPort.getOutputStream());
@@ -56,12 +60,12 @@ public class PrimaryController {
 	}
 
 	private void sendUsername(String username) {
-        if (serialPort != null && serialPort.isOpen()) {
-            String message = "LOGIN:" + username;
-            sensorWriter.println(message);
-            sensorWriter.flush();
-            System.out.println("Sent: " + message);
-        }
-    }
+		if (serialPort != null && serialPort.isOpen()) {
+			String message = "LOGIN:" + username;
+			sensorWriter.println(message);
+			sensorWriter.flush();
+			System.out.println("Sent: " + message);
+		}
+	}
 
 }
